@@ -1,0 +1,127 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Survey Form</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <script src="../script.js"></script> 
+
+    <style>
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        input, button {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        button[type="submit"] {
+            background-color: blue;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button[type="submit"]:hover {
+            background-color: orange;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Survey Form</h1>
+        <form id="survey-form">
+            <label for="studentid">Student ID:</label>
+            <input type="text" id="studentid" name="studentid" required>
+            
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+            
+            <label for="gender">Gender:</label>
+            <input type="text" id="gender" name="gender" required>
+            
+            <label for="age">Age:</label>
+            <input type="number" id="age" name="age" required>
+            
+            <button type="submit">Submit</button>
+        </form>
+        
+        <div id="response"></div>
+        
+        <button onclick="fetchUsers()">Fetch Users</button>
+        <div id="users"></div>
+    </div>
+    
+    <script>
+        document.getElementById('survey-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const formData = {
+                studentid: document.getElementById('studentid').value,
+                name: document.getElementById('name').value,
+                gender: document.getElementById('gender').value,
+                age: document.getElementById('age').value
+            };
+
+            fetch('/api/create', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                let message = 'Survey submitted successfully!';
+                if (data.error) {
+                    message = `Error: ${data.error}`;
+                }
+                document.getElementById('response').innerText = message;
+                if (!data.error) {
+                    document.getElementById('survey-form').reset();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('response').innerText = 'There was an error submitting the survey.';
+            });
+        });
+
+        function fetchUsers() {
+            fetch('/api/read', {
+                method: 'GET'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    document.getElementById('users').innerText = `Error: ${data.error}`;
+                } else {
+                    const usersList = data.map(user => {
+                        return `<li>${user.studentid}: ${user.name}, ${user.gender}, ${user.age}</li>`;
+                    }).join('');
+                    document.getElementById('users').innerHTML = `<ul>${usersList}</ul>`;
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('users').innerText = 'There was an error fetching the users.';
+            });
+        }
+    </script>
+</body>
+</html> 
